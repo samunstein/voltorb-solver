@@ -25,6 +25,9 @@ class FiveGrid(object):
             assert len(inner_list) == 5
         self.__grid = grid_lists
 
+        # Pre-calculate columns for performance
+        self.__columns = [[inner[coln] for inner in self.__grid] for coln in range(5)]
+
     def __getitem__(self, item: Tuple[int, int]):
         """
         :param item: Tuple of two integers
@@ -49,7 +52,7 @@ class FiveGrid(object):
 
     def column(self, j: int):
         assert 0 <= j < 5
-        return [inner[j] for inner in self.__grid]
+        return self.__columns[j]
 
     def row(self, i: int):
         assert 0 <= i < 5
@@ -148,20 +151,16 @@ class InputGrid(FiveGrid):
         :param hint:
         :return:
         """
-        # More voltorbs than allowed, or more numbers than allowed
-        if voltorbs > hint.voltorbs or numbersum > hint.numbers:
-            return False
-
-        # If everything is flipped, does everything match
-        if unknowns == 0 and (voltorbs != hint.voltorbs or numbersum != hint.numbers):
-            return False
-
         # Values over 1s exceed the possible values over 1
         # 5 - hint.voltorbs = number cards in row
         # hint.numbers - number cards in row = sum of values exceeding one
         # 5 - unknowns = flipped cards
         # numbersum - flipped cards = sum of values exceeding one
-        if hint.numbers - (5 - hint.voltorbs) < numbersum - (5 - unknowns):
+        if hint.numbers + hint.voltorbs < numbersum + unknowns:
+            return False
+
+        # More voltorbs than allowed, or more numbers than allowed
+        if voltorbs > hint.voltorbs or numbersum > hint.numbers:
             return False
 
         # Less voltorbs possible than stated
@@ -170,6 +169,10 @@ class InputGrid(FiveGrid):
 
         # Less numbers possible than stated
         if numbersum + 3 * unknowns < hint.numbers:
+            return False
+
+        # If everything is flipped, does everything match
+        if unknowns == 0 and (voltorbs != hint.voltorbs or numbersum != hint.numbers):
             return False
 
         return True
