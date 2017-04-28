@@ -119,14 +119,13 @@ class InputGrid(FiveGrid):
         self.bottom = bottom
         self.right = right
 
-    def has_unknowns(self):
-        return self.first_unknown() is not None
-
     def first_unknown(self):
+        indx = 0
         for card in self.list_of_all():
             if card.state == State.UNKNOWN:
-                return card
-        return None
+                return card, indx // 5, indx % 5
+            indx += 1
+        return None, -1, -1
 
     @staticmethod
     def numbers_from_list(cardlist: List[Card]) -> Tuple[int, int, int]:
@@ -149,9 +148,11 @@ class InputGrid(FiveGrid):
         :param hint:
         :return:
         """
+        # More voltorbs than allowed, or more numbers than allowed
         if voltorbs > hint.voltorbs or numbersum > hint.numbers:
             return False
 
+        # If everything is flipped, does everything match
         if unknowns == 0 and (voltorbs != hint.voltorbs or numbersum != hint.numbers):
             return False
 
@@ -163,20 +164,36 @@ class InputGrid(FiveGrid):
         if hint.numbers - (5 - hint.voltorbs) < numbersum - (5 - unknowns):
             return False
 
+        # Less voltorbs possible than stated
+        if unknowns + voltorbs < hint.voltorbs:
+            return False
+
+        # Less numbers possible than stated
+        if numbersum + 3 * unknowns < hint.numbers:
+            return False
+
         return True
 
-    def is_possible(self):
+    def is_possible(self, row: int = None, col: int = None):
         """
         :return: Is the grid with the current card values possible
         """
-        for rown in range(5):
+        if row and col:
+            assert 0 <= row < 5 and 0 <= col < 5
+            rownindex = [row]
+            colnindex = [col]
+        else:
+            rownindex = range(5)
+            colnindex = range(5)
+
+        for rown in rownindex:
             row = self.row(rown)
             hint = self.right[rown]
             voltorbs, numbersum, unknowns = self.numbers_from_list(row)
             if not self.check(voltorbs, numbersum, unknowns, hint):
                 return False
 
-        for coln in range(5):
+        for coln in colnindex:
             col = self.column(coln)
             hint = self.bottom[coln]
             voltorbs, numbersum, unknowns = self.numbers_from_list(col)

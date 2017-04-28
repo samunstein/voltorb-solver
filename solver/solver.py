@@ -13,13 +13,13 @@ class Solver(object):
         return self.__possibility_grid
 
     def __try(self):
-        card = self.__grid.first_unknown()
+        card, row, col = self.__grid.first_unknown()
         if card is None:
             self.__possibility_grid.add_possibility(self.__grid)
         else:
             for state in State.list_of_known_states():
                 card.state = state
-                if self.__grid.is_possible():
+                if self.__grid.is_possible(row, col):
                     self.__try()
             card.state = State.UNKNOWN
 
