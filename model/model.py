@@ -1,42 +1,67 @@
-from typing import List
+from typing import List, Tuple
+from enum import Enum
 
 
-VOLTORB = 0
-ONE = 1
-TWO = 2
-THREE = 3
-UNKNOWN = 4
-STATES = [VOLTORB, ONE, TWO, THREE, UNKNOWN]
+class State(Enum):
+    VOLTORB = 0
+    ONE = 1
+    TWO = 2
+    THREE = 3
+    UNKNOWN = 4
+
+    @staticmethod
+    def list_of_states():
+        return [State.VOLTORB, State.ONE, State.TWO, State.THREE, State.UNKNOWN]
+
+    @staticmethod
+    def list_of_known_states():
+        return [State.VOLTORB, State.ONE, State.TWO, State.THREE]
 
 
 class FiveGrid(object):
-    def __init__(self, grid_lists: List[List[object]]):
+    def __init__(self, grid_lists: List[List]):
         assert len(grid_lists) == 5
         for inner_list in grid_lists:
             assert len(inner_list) == 5
         self.__grid = grid_lists
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: Tuple[int, int]):
         """
         :param item: Tuple of two integers
         :return:
         """
-        assert type(item) is tuple
         assert len(item) == 2
-        assert type(item[1]) is int
-        assert type(item[0]) is int
         assert 0 <= item[1] < 5
         assert 0 <= item[0] < 5
         return self.__grid[item[0]][item[1]]
 
+    def __setitem__(self, key, value):
+        assert len(key) == 2
+        assert 0 <= key[1] < 5
+        assert 0 <= key[0] < 5
+        self.__grid[key[0]][key[1]] = value
+
+    def list_of_all(self) -> List:
+        l = list()
+        for inner in self.__grid:
+            l.extend(inner)
+        return l
+
+    def column(self, j: int):
+        assert 0 <= j < 5
+        return [inner[j] for inner in self.__grid]
+
+    def row(self, i: int):
+        assert 0 <= i < 5
+        return self.__grid[i]
+
 
 class Card(object):
-    def __init__(self, state: int):
+    def __init__(self, state: State):
         """
         Initializes Card class. Has a state
         :param state:
         """
-        assert state in STATES
         self.state = state
 
 
@@ -45,38 +70,31 @@ class Possibility(object):
     Class remembering possibilities for a card
     """
     def __init__(self, voltorb: int = 0, one: int = 0, two: int = 0, three: int = 0):
-        self.voltorb = voltorb
-        self.one = one
-        self.two = two
-        self.three = three
+        self.values = {State.VOLTORB: voltorb,
+                       State.ONE: one,
+                       State.TWO: two,
+                       State.THREE: three}
 
     def probabilities(self):
         """
         :return: Dictionary of probabilities for each card type
         """
-        all_summed = self.voltorb + self.one + self.two + self.three
-        return {VOLTORB: self.voltorb / all_summed,
-                ONE: self.one / all_summed,
-                TWO: self.two / all_summed,
-                THREE: self.three / all_summed}
+        all_summed = sum(self.values.values())
+        return dict([(key, self.values[key] / all_summed) for key in self.values])
 
     def useful(self):
         """
         :return: Boolean telling if the card is worth flipping at all
         """
-        return self.two > 0 or self.three > 0
+        return self.values[State.TWO] > 0 or self.values[State.THREE] > 0
 
+    def safe(self):
+        return self.values[State.VOLTORB] == 0
 
-class PossibilityGrid(FiveGrid):
-    """
-    Class which remembers the possibilities for each card
-    """
-    def __init__(self, possibilities: List[List[Possibility]]):
-        """
-        :param possibilities:
-        """
-        super().__init__(possibilities)
-        self.possibilities = possibilities
+    def add(self, which: State):
+        assert type(which) is State
+        assert which in State.list_of_known_states()
+        self.values[which] += 1
 
 
 class Hint(object):
@@ -89,12 +107,99 @@ class InputGrid(FiveGrid):
     """
     Class which takes the inputs for both hints and the cards from the user
     """
-    def __init__(self, cards: List[List[Card]], bottom: List[Hint], right: List[Hint]):
+    def __init__(self, bottom: List[Hint], right: List[Hint], cards: List[List[Card]] = None):
         """
         :param cards: List of lists of Cards
         :param bottom: List of Hints
         :param right: List of Hints
         """
+        if cards is None:
+            cards = [[Card(State.UNKNOWN) for _ in range(5)] for _ in range(5)]
         super().__init__(cards)
         self.bottom = bottom
         self.right = right
+
+    def has_unknowns(self):
+        return self.first_unknown() is not None
+
+    def first_unknown(self):
+        for card in self.list_of_all():
+            if card.state == State.UNKNOWN:
+                return card
+        return None
+
+    @staticmethod
+    def numbers_from_list(cardlist: List[Card]) -> Tuple[int, int, int]:
+        voltorbs = sum(map(lambda card: 1 if card.state == State.VOLTORB else 0, cardlist))
+        numbersum = sum(
+            map(lambda card: 1 if card.state == State.ONE
+                else 2 if card.state == State.TWO
+                else 3 if card.state == State.THREE else 0,
+                cardlist))
+        unknowns = sum(map(lambda card: 1 if card.state == State.UNKNOWN else 0, cardlist))
+        return voltorbs, numbersum, unknowns
+
+    @staticmethod
+    def check(voltorbs: int, numbersum: int, unknowns: int, hint: Hint):
+        """
+        Check the possibility of the row or column against the hint
+        :param voltorbs:
+        :param numbersum:
+        :param unknowns:
+        :param hint:
+        :return:
+        """
+        if voltorbs > hint.voltorbs or numbersum > hint.numbers:
+            return False
+
+        if unknowns == 0 and (voltorbs != hint.voltorbs or numbersum != hint.numbers):
+            return False
+
+        # Values over 1s exceed the possible values over 1
+        # 5 - hint.voltorbs = number cards in row
+        # hint.numbers - number cards in row = sum of values exceeding one
+        # 5 - unknowns = flipped cards
+        # numbersum - flipped cards = sum of values exceeding one
+        if hint.numbers - (5 - hint.voltorbs) < numbersum - (5 - unknowns):
+            return False
+
+        return True
+
+    def is_possible(self):
+        """
+        :return: Is the grid with the current card values possible
+        """
+        for rown in range(5):
+            row = self.row(rown)
+            hint = self.right[rown]
+            voltorbs, numbersum, unknowns = self.numbers_from_list(row)
+            if not self.check(voltorbs, numbersum, unknowns, hint):
+                return False
+
+        for coln in range(5):
+            col = self.column(coln)
+            hint = self.bottom[coln]
+            voltorbs, numbersum, unknowns = self.numbers_from_list(col)
+            if not self.check(voltorbs, numbersum, unknowns, hint):
+                return False
+
+        return True
+
+
+class PossibilityGrid(FiveGrid):
+    """
+    Class which remembers the possibilities for each card
+    """
+    def __init__(self, possibilities: List[List[Possibility]] = None):
+        """
+        :param possibilities:
+        """
+        if not possibilities:
+            possibilities = [[Possibility() for _ in range(5)] for _ in range(5)]
+        super().__init__(possibilities)
+        self.possibilities = possibilities
+
+    def add_possibility(self, grid: InputGrid):
+        for i in range(5):
+            for j in range(5):
+                self[i, j].add(grid[i, j].state)
