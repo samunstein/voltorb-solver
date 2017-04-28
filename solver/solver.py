@@ -22,6 +22,8 @@ class Solver(object):
                 if self.__grid.is_possible(row, col):
                     self.__try()
             card.state = State.UNKNOWN
+            # This is done here even if it is very unintuitive
+            self.__grid.unknowns.pop()
 
 """
 xample  = [[1, 1, 1, 0, 1],

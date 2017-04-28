@@ -20,42 +20,29 @@ class State(Enum):
 
 class FiveGrid(object):
     def __init__(self, grid_lists: List[List]):
-        assert len(grid_lists) == 5
-        for inner_list in grid_lists:
-            assert len(inner_list) == 5
         self.__grid = grid_lists
 
         # Pre-calculate columns for performance
         self.__columns = [[inner[coln] for inner in self.__grid] for coln in range(5)]
+        l = list()
+        for inner in self.__grid:
+            l.extend(inner)
+        self.list_of_all = l
 
     def __getitem__(self, item: Tuple[int, int]):
         """
         :param item: Tuple of two integers
         :return:
         """
-        assert len(item) == 2
-        assert 0 <= item[1] < 5
-        assert 0 <= item[0] < 5
         return self.__grid[item[0]][item[1]]
 
     def __setitem__(self, key, value):
-        assert len(key) == 2
-        assert 0 <= key[1] < 5
-        assert 0 <= key[0] < 5
         self.__grid[key[0]][key[1]] = value
 
-    def list_of_all(self) -> List:
-        l = list()
-        for inner in self.__grid:
-            l.extend(inner)
-        return l
-
     def column(self, j: int):
-        assert 0 <= j < 5
         return self.__columns[j]
 
     def row(self, i: int):
-        assert 0 <= i < 5
         return self.__grid[i]
 
 
@@ -95,8 +82,6 @@ class Possibility(object):
         return self.values[State.VOLTORB] == 0
 
     def add(self, which: State):
-        assert type(which) is State
-        assert which in State.list_of_known_states()
         self.values[which] += 1
 
 
@@ -121,24 +106,29 @@ class InputGrid(FiveGrid):
         super().__init__(cards)
         self.bottom = bottom
         self.right = right
+        self.unknowns = []
 
     def first_unknown(self):
-        indx = 0
-        for card in self.list_of_all():
+        indx = self.unknowns[-1] if len(self.unknowns) > 0 else 0
+        for card in self.list_of_all[indx:]:
             if card.state == State.UNKNOWN:
+                self.unknowns.append(indx)
                 return card, indx // 5, indx % 5
             indx += 1
         return None, -1, -1
 
     @staticmethod
     def numbers_from_list(cardlist: List[Card]) -> Tuple[int, int, int]:
-        voltorbs = sum(map(lambda card: 1 if card.state == State.VOLTORB else 0, cardlist))
-        numbersum = sum(
-            map(lambda card: 1 if card.state == State.ONE
-                else 2 if card.state == State.TWO
-                else 3 if card.state == State.THREE else 0,
-                cardlist))
-        unknowns = sum(map(lambda card: 1 if card.state == State.UNKNOWN else 0, cardlist))
+        voltorbs = 0
+        numbersum = 0
+        unknowns = 0
+        for card in cardlist:
+            if card.state == State.VOLTORB:
+                voltorbs += 1
+            elif card.state == State.UNKNOWN:
+                unknowns += 1
+            else:
+                numbersum += 1 if card.state == State.ONE else 2 if card.state == State.TWO else 3
         return voltorbs, numbersum, unknowns
 
     @staticmethod
@@ -182,7 +172,6 @@ class InputGrid(FiveGrid):
         :return: Is the grid with the current card values possible
         """
         if row and col:
-            assert 0 <= row < 5 and 0 <= col < 5
             rownindex = [row]
             colnindex = [col]
         else:
