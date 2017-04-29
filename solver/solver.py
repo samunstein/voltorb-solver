@@ -1,4 +1,4 @@
-from model.model import InputGrid, PossibilityGrid, Possibility, Card, Hint, State
+from model.model import InputGrid, PossibilityGrid, Hint, KNOWN_STATES, UNKNOWN, ONE, TWO, THREE, VOLTORB
 
 
 class Solver(object):
@@ -17,11 +17,11 @@ class Solver(object):
         if card is None:
             self.__possibility_grid.add_possibility(self.__grid)
         else:
-            for state in State.list_of_known_states():
+            for state in KNOWN_STATES:
                 card.state = state
                 if self.__grid.is_possible(row, col):
                     self.__try()
-            card.state = State.UNKNOWN
+            card.state = UNKNOWN
             # This is done here even if it is very unintuitive
             self.__grid.unknowns.pop()
 
@@ -69,8 +69,8 @@ if __name__ == "__main__":
 
     for i in range(5):
         for j in range(5):
-            if knowns[i][j] != 0:
-                example[i, j].state = State.ONE if knowns[i][j] == 1 else State.TWO if knowns[i][j] == 2 else State.THREE
+            if knowns[i][j] != VOLTORB:
+                example[i, j].state = 1 if knowns[i][j] == ONE else 2 if knowns[i][j] == TWO else 3
     result = Solver().solve(example)
 
     for i in range(5):
@@ -80,14 +80,14 @@ if __name__ == "__main__":
             if not poss.useful():
                 r += "MEH"
             else:
-                if poss.values[State.ONE] > 0:
+                if poss.values[1] > 0:
                     r += "1"
-                if poss.values[State.TWO] > 0:
+                if poss.values[2] > 0:
                     r += "2"
-                if poss.values[State.THREE] > 0:
+                if poss.values[3] > 0:
                     r += "3"
-                if poss.values[State.VOLTORB] > 0:
-                    r += "V={:.0f}".format(100 * poss.probabilities()[State.VOLTORB])
+                if poss.values[0] > 0:
+                    r += "V={:.0f}".format(100 * poss.probabilities()[0])
             print("{:10s}".format(r), end="")
         print()
         print()

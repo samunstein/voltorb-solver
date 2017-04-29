@@ -1,21 +1,13 @@
 from typing import List, Tuple
-from enum import Enum
 
+VOLTORB = 0
+ONE = 1
+TWO = 2
+THREE = 3
+UNKNOWN = 4
 
-class State(Enum):
-    VOLTORB = 0
-    ONE = 1
-    TWO = 2
-    THREE = 3
-    UNKNOWN = 4
-
-    @staticmethod
-    def list_of_states():
-        return [State.VOLTORB, State.ONE, State.TWO, State.THREE, State.UNKNOWN]
-
-    @staticmethod
-    def list_of_known_states():
-        return [State.VOLTORB, State.ONE, State.TWO, State.THREE]
+ALL_STATES = [VOLTORB, ONE, TWO, THREE, UNKNOWN]
+KNOWN_STATES = ALL_STATES[:-1]
 
 
 class FiveGrid(object):
@@ -47,7 +39,7 @@ class FiveGrid(object):
 
 
 class Card(object):
-    def __init__(self, state: State):
+    def __init__(self, state: int):
         """
         Initializes Card class. Has a state
         :param state:
@@ -60,10 +52,10 @@ class Possibility(object):
     Class remembering possibilities for a card
     """
     def __init__(self, voltorb: int = 0, one: int = 0, two: int = 0, three: int = 0):
-        self.values = {State.VOLTORB: voltorb,
-                       State.ONE: one,
-                       State.TWO: two,
-                       State.THREE: three}
+        self.values = {VOLTORB: voltorb,
+                       ONE: one,
+                       TWO: two,
+                       THREE: three}
 
     def probabilities(self):
         """
@@ -76,12 +68,12 @@ class Possibility(object):
         """
         :return: Boolean telling if the card is worth flipping at all
         """
-        return self.values[State.TWO] > 0 or self.values[State.THREE] > 0
+        return self.values[TWO] > 0 or self.values[THREE] > 0
 
     def safe(self):
-        return self.values[State.VOLTORB] == 0
+        return self.values[VOLTORB] == 0
 
-    def add(self, which: State):
+    def add(self, which: int):
         self.values[which] += 1
 
 
@@ -102,7 +94,7 @@ class InputGrid(FiveGrid):
         :param right: List of Hints
         """
         if cards is None:
-            cards = [[Card(State.UNKNOWN) for _ in range(5)] for _ in range(5)]
+            cards = [[Card(UNKNOWN) for _ in range(5)] for _ in range(5)]
         super().__init__(cards)
         self.bottom = bottom
         self.right = right
@@ -111,7 +103,7 @@ class InputGrid(FiveGrid):
     def first_unknown(self):
         indx = self.unknowns[-1] if len(self.unknowns) > 0 else 0
         for card in self.list_of_all[indx:]:
-            if card.state == State.UNKNOWN:
+            if card.state == UNKNOWN:
                 self.unknowns.append(indx)
                 return card, indx // 5, indx % 5
             indx += 1
@@ -123,12 +115,12 @@ class InputGrid(FiveGrid):
         numbersum = 0
         unknowns = 0
         for card in cardlist:
-            if card.state == State.VOLTORB:
+            if card.state == VOLTORB:
                 voltorbs += 1
-            elif card.state == State.UNKNOWN:
+            elif card.state == UNKNOWN:
                 unknowns += 1
             else:
-                numbersum += 1 if card.state == State.ONE else 2 if card.state == State.TWO else 3
+                numbersum += card.state
         return voltorbs, numbersum, unknowns
 
     @staticmethod
