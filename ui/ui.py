@@ -13,8 +13,7 @@ class VoltorbUI:
         self.__images = [PhotoImage("voltorb", file="0.png"),
                          PhotoImage("one", file="1.png"),
                          PhotoImage("two", file="2.png"),
-                         PhotoImage("three", file="3.png"),
-                         PhotoImage("empty", file="e.png")
+                         PhotoImage("three", file="3.png")
                         ]
         self.__new_game_entry = Entry(self.__mainwindow)
         self.__new_game_entry.grid(row=15, column=0, columnspan=9, sticky=W + E)
