@@ -1,5 +1,5 @@
 from model.model import InputGrid, PossibilityGrid, Hint, KNOWN_STATES, UNKNOWN, ONE, TWO, THREE, VOLTORB
-
+from ui.ui import VoltorbUI
 
 class Solver(object):
     def __init__(self):
@@ -46,51 +46,50 @@ for i in range(5):
     right.append(Hint(sum(row), row.count(0)))
 """
 
-if __name__ == "__main__":
-    # Up-down -> left-right
-    hints = "7 0 5 2 4 2 4 3 6 1 4 2 6 1 7 2 4 1 5 2"
+def solve(hints="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", knowns=None):
     numhints = [int(a) for a in hints.split()]
     right = [Hint(numhints[i], numhints[i+1]) for i in range(0, 10, 2)]
     bottom = [Hint(numhints[i], numhints[i+1]) for i in range(10, 20, 2)]
 
     example = InputGrid(bottom, right)
 
-    zeross = [[0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0]]
-
-    knowns = [[0, 0, 3, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0]]
+    if knowns is None:
+        knowns = [[0, 0, 0, 0, 0],
+                  [0, 0, 0, 0, 0],
+                  [0, 0, 0, 0, 0],
+                  [0, 0, 0, 0, 0],
+                  [0, 0, 0, 0, 0]]
 
     for i in range(5):
         for j in range(5):
             if knowns[i][j] != VOLTORB:
                 example[i, j].state = 1 if knowns[i][j] == ONE else 2 if knowns[i][j] == TWO else 3
-    result = Solver().solve(example)
+    return Solver().solve(example)
 
-    for i in range(5):
-        for j in range(5):
-            poss = result[i, j]
-            r = ""
-            if not poss.useful():
-                if not poss.safe():
-                    r += "NO"
-                else:
-                    r += "1"
-            else:
-                if poss.values[1] > 0:
-                    r += "1"
-                if poss.values[2] > 0:
-                    r += "2"
-                if poss.values[3] > 0:
-                    r += "3"
-            if poss.values[0] > 0:
-                r += "V={:.0f}".format(100 * poss.probabilities()[0])
-            print("{:10s}".format(r), end="")
-        print()
-        print()
+
+def main():
+    knowns = [[0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0]]
+    hints = "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"
+    result = solve()
+
+    def button_press(ui, x, y, i):
+        knowns[y][x] = i
+        result = solve(hints, knowns)
+        ui.update(result)
+
+    def new_game(ui, new_hints):
+        for i in range(5):
+            for j in range(5):
+                knowns[i][j] = 0
+        nonlocal hints
+        hints = new_hints
+        result = solve(hints)
+        ui.update(result)
+
+    ui = VoltorbUI(result, button_press, new_game)
+
+main()
