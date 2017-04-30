@@ -48,7 +48,7 @@ for i in range(5):
 
 if __name__ == "__main__":
     # Up-down -> left-right
-    hints = "3 2 7 2 5 2 6 2 5 2 7 1 2 4 6 2 7 1 4 2"
+    hints = "7 0 5 2 4 2 4 3 6 1 4 2 6 1 7 2 4 1 5 2"
     numhints = [int(a) for a in hints.split()]
     right = [Hint(numhints[i], numhints[i+1]) for i in range(0, 10, 2)]
     bottom = [Hint(numhints[i], numhints[i+1]) for i in range(10, 20, 2)]
@@ -61,7 +61,7 @@ if __name__ == "__main__":
               [0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0]]
 
-    knowns = [[0, 0, 0, 0, 0],
+    knowns = [[0, 0, 3, 0, 0],
               [0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0],
@@ -78,7 +78,10 @@ if __name__ == "__main__":
             poss = result[i, j]
             r = ""
             if not poss.useful():
-                r += "MEH"
+                if not poss.safe():
+                    r += "NO"
+                else:
+                    r += "1"
             else:
                 if poss.values[1] > 0:
                     r += "1"
@@ -86,8 +89,8 @@ if __name__ == "__main__":
                     r += "2"
                 if poss.values[3] > 0:
                     r += "3"
-                if poss.values[0] > 0:
-                    r += "V={:.0f}".format(100 * poss.probabilities()[0])
+            if poss.values[0] > 0:
+                r += "V={:.0f}".format(100 * poss.probabilities()[0])
             print("{:10s}".format(r), end="")
         print()
         print()
