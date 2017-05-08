@@ -47,9 +47,12 @@ for i in range(5):
 """
 
 def solve(hints="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", knowns=None):
-    numhints = [int(a) for a in hints.split()]
-    right = [Hint(numhints[i], numhints[i+1]) for i in range(0, 10, 2)]
-    bottom = [Hint(numhints[i], numhints[i+1]) for i in range(10, 20, 2)]
+    try:
+        numhints = [int(a) for a in hints.split()]
+        right = [Hint(numhints[i], numhints[i+1]) for i in range(0, 10, 2)]
+        bottom = [Hint(numhints[i], numhints[i+1]) for i in range(10, 20, 2)]
+    except:
+        return False
 
     example = InputGrid(bottom, right)
 
@@ -66,6 +69,26 @@ def solve(hints="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", knowns=None):
                 example[i, j].state = 1 if knowns[i][j] == ONE else 2 if knowns[i][j] == TWO else 3
     return Solver().solve(example)
 
+def parse_hints(hint):
+    if len(hint) == 20:
+        return " ".join(list(hint))
+    elif len(hint) >= 39:
+        return hint
+    else:
+        hintlist = hint.split(" ")
+        if len(hintlist) == 2:
+            if len(hintlist[0]) < len(hintlist[1]):
+                return " ".join([hintlist[0]] + list(hintlist[1]))
+            else:
+                return " ".join(list(hintlist[0]) + [hintlist[1]])
+        else:
+            hint = []
+            for part in hintlist:
+                if len(part) == 2:
+                    hint.append(part)
+                else:
+                    hint += list(part)
+            return " ".join(hint)
 
 def main():
     knowns = [[0, 0, 0, 0, 0],
@@ -79,6 +102,8 @@ def main():
     def button_press(ui, x, y, i):
         knowns[y][x] = i
         result = solve(hints, knowns)
+        if not result:
+            return
         ui.update(result)
 
     def new_game(ui, new_hints):
@@ -86,8 +111,10 @@ def main():
             for j in range(5):
                 knowns[i][j] = 0
         nonlocal hints
-        hints = new_hints
+        hints = parse_hints(new_hints)
         result = solve(hints)
+        if not result:
+            return
         ui.update(result)
 
     ui = VoltorbUI(result, button_press, new_game)
