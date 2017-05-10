@@ -14,7 +14,7 @@ from keras.layers import Conv2D, MaxPooling2D
 
 batch_size = 32
 num_classes = 6
-epochs = 5
+epochs = 150
 
 
 def read_images():
@@ -41,29 +41,48 @@ def train():
 
     model = Sequential()
 
-    model.add(Conv2D(16, (2, 2), padding='same', input_shape=x_train.shape[1:]))
+    model.add(Conv2D(64, (3, 3), padding='same', input_shape=x_train.shape[1:]))
     model.add(Activation('tanh'))
-    model.add(Conv2D(16, (2, 2)))
+    model.add(Conv2D(64, (3, 3)))
     model.add(Activation('tanh'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
+    model.add(Dropout(0.2))
 
-    model.add(Conv2D(32, (3, 3), padding='same'))
+    model.add(Conv2D(64, (3, 3), padding='same'))
     model.add(Activation('tanh'))
-    model.add(Conv2D(32, (3, 3)))
+    model.add(Conv2D(64, (3, 3)))
     model.add(Activation('tanh'))
-    model.add(Conv2D(32, (3, 3), padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
+    model.add(Dropout(0.2))
+
+    model.add(Conv2D(64, (3, 3), padding='same'))
+    model.add(Activation('tanh'))
+    model.add(Conv2D(64, (3, 3)))
+    model.add(Activation('tanh'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.2))
+
+    model.add(Conv2D(64, (3, 3), padding='same'))
+    model.add(Activation('tanh'))
+    model.add(Conv2D(64, (3, 3)))
+    model.add(Activation('tanh'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.2))
 
     model.add(Flatten())
-    model.add(Dense(128))
+    model.add(Dense(512))
     model.add(Activation('tanh'))
-    model.add(Dropout(0.25))
+    model.add(Dropout(0.3))
     model.add(Dense(num_classes))
     model.add(Activation('softmax'))
 
-    model.compile(loss='mean_squared_error', optimizer='sgd', metrics=['accuracy'])
+    # initiate RMSprop optimizer
+    opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
+
+    # Let's train the model using RMSprop
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=opt,
+                  metrics=['accuracy'])
 
     model.fit(x_train, y_train,
               batch_size=batch_size,

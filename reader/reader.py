@@ -36,7 +36,7 @@ def read_webcam():
     pygame.camera.init()
 
     cameras = pygame.camera.list_cameras()
-    webcam = pygame.camera.Camera(cameras[0])
+    webcam = pygame.camera.Camera(cameras[1]) # Set right camera here
     webcam.start()
 
     # grab first frame

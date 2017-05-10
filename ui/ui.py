@@ -82,13 +82,13 @@ class VoltorbUI:
             self.color_buttons(pos[0], pos[1], "red")
 
     def new_game(self):
-        self.__new_game(self, self.__new_game_entry.get())
-        self.__new_game_entry.delete(0, END)
         self.__clicked = [0, 0, 0, 0, 0,
                           0, 0, 0, 0, 0,
                           0, 0, 0, 0, 0,
                           0, 0, 0, 0, 0,
                           0, 0, 0, 0, 0]
+        self.__new_game(self, self.__new_game_entry.get())
+        self.__new_game_entry.delete(0, END)
 
 
     def color_buttons(self, x, y, color):

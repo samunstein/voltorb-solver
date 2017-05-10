@@ -124,7 +124,7 @@ def main():
         pygame.camera.init()
 
         cameras = pygame.camera.list_cameras()
-        webcam = pygame.camera.Camera(cameras[0])  # Change the right camera here. No way to know without trying.
+        webcam = pygame.camera.Camera(cameras[1])  # Change the right camera here. No way to know without trying.
         webcam.start()
 
     VoltorbUI(result, button_press, new_game)
