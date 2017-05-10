@@ -141,16 +141,18 @@ class InputGrid(FiveGrid):
         if hint.numbers + hint.voltorbs < numbersum + unknowns:
             return False
 
+        # Less numbers possible than stated
+        # Unknown voltorbs = hint.voltorbs - voltorbs
+        # Unflipped numbers = unknowns - unknown voltorbs
+        if numbersum + 3 * (unknowns - (hint.voltorbs - voltorbs)) < hint.numbers:
+            return False
+
         # More voltorbs than allowed, or more numbers than allowed
         if voltorbs > hint.voltorbs or numbersum > hint.numbers:
             return False
 
         # Less voltorbs possible than stated
         if unknowns + voltorbs < hint.voltorbs:
-            return False
-
-        # Less numbers possible than stated
-        if numbersum + 3 * unknowns < hint.numbers:
             return False
 
         # If everything is flipped, does everything match
