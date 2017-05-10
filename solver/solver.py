@@ -1,6 +1,18 @@
 from model.model import InputGrid, PossibilityGrid, Hint, KNOWN_STATES, UNKNOWN, ONE, TWO, THREE, VOLTORB
 from ui.ui import VoltorbUI
 
+GATHERMODE = True
+
+
+
+if GATHERMODE:
+    import time
+    import pygame.camera
+    from reader.reader import imgprocess, hints as get_hints, save_hints
+    import reader.reader
+    reader.reader.READERFOLDER = "../reader/"
+
+
 class Solver(object):
     def __init__(self):
         self.__grid = None
@@ -25,26 +37,6 @@ class Solver(object):
             # This is done here even if it is very unintuitive
             self.__grid.unknowns.pop()
 
-"""
-xample  = [[1, 1, 1, 0, 1],
-           [2, 1, 1, 1, 2],
-           [0, 0, 1, 1, 3],
-           [1, 1, 1, 0, 2],
-           [1, 1, 1, 1, 0]]
-bottom = []
-for i in range(5):
-    col = []
-    for j in range(5):
-        col.append(xample[j][i])
-    bottom.append(Hint(sum(col), col.count(0)))
-
-right = []
-for i in range(5):
-    row = []
-    for j in range(5):
-        row.append(xample[i][j])
-    right.append(Hint(sum(row), row.count(0)))
-"""
 
 def solve(hints="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", knowns=None):
     try:
@@ -117,6 +109,24 @@ def main():
             return
         ui.update(result)
 
-    ui = VoltorbUI(result, button_press, new_game)
+        # If gathering images, save them
+        if GATHERMODE:
+            t = time.perf_counter()
+            img = pygame.surfarray.array3d(webcam.get_image())
+            while time.perf_counter() < t + 0.5:
+                img = pygame.surfarray.array3d(webcam.get_image())
+            imgs = imgprocess(img)
+            hint = get_hints(imgs)
+            save_hints(hint, hints.split())
+
+
+    if GATHERMODE:
+        pygame.camera.init()
+
+        cameras = pygame.camera.list_cameras()
+        webcam = pygame.camera.Camera(cameras[0])  # Change the right camera here. No way to know without trying.
+        webcam.start()
+
+    VoltorbUI(result, button_press, new_game)
 
 main()

@@ -19,7 +19,7 @@ class VoltorbUI:
                          PhotoImage("three", file="3.png")
                         ]
         self.__new_game_entry = Entry(self.__mainwindow)
-        self.__new_game_entry.grid(row=15, column=0, columnspan=9, sticky=W + E)
+        self.__new_game_entry.grid(row=15, column=0, columnspan=15, sticky=W + E)
         Button(self.__mainwindow, command=self.new_game, text="New Game").grid(row=12, column=SHOWTABLE_X_SHIFT + 3, columnspan=2)
         Button(self.__mainwindow, command=self.__mainwindow.destroy, text="Quit").grid(row=13, column=SHOWTABLE_X_SHIFT + 4, columnspan=2)
         self.__buttons = []

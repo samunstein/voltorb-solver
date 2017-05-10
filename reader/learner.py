@@ -3,6 +3,8 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 import scipy.misc
 import os
+import keras.utils
+
 
 import keras
 from keras.preprocessing.image import ImageDataGenerator
@@ -11,11 +13,8 @@ from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 
 batch_size = 32
-num_classes = 16+6
-epochs = 50
-
-def transform_label(val, values):
-    return [1 if i == val else 0 for i in range(values)]
+num_classes = 6
+epochs = 5
 
 
 def read_images():
@@ -25,15 +24,11 @@ def read_images():
     for line in f:
         parts = line.strip().split(":")
         numbers = parts[1].split(" ")
-        label = []
-        label.extend(transform_label(int(numbers[2]), 6))
+        img = scipy.misc.imread(parts[0])
+        data.append(img)
+        labels.append(keras.utils.to_categorical(int(numbers[1]), 6).reshape(6))
 
-        img = scipy.misc.imread(os.path.join("img", parts[0]))
-        if img.shape == (86, 86, 3):
-            data.append(img)
-            labels.append(label)
-
-    return np.array(data), labels
+    return np.array(data), np.array(labels)
 
 
 def train():
@@ -46,39 +41,47 @@ def train():
 
     model = Sequential()
 
-    model.add(Conv2D(32, (4, 4), padding='same', input_shape=x_train.shape[1:]))
-    model.add(Activation('softmax'))
-    model.add(Conv2D(32, (4, 4)))
-    model.add(Activation('softmax'))
+    model.add(Conv2D(16, (2, 2), padding='same', input_shape=x_train.shape[1:]))
+    model.add(Activation('tanh'))
+    model.add(Conv2D(16, (2, 2)))
+    model.add(Activation('tanh'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
 
-    model.add(Conv2D(64, (4, 4), padding='same'))
-    model.add(Activation('softmax'))
-    model.add(Conv2D(64, (4, 4)))
-    model.add(Activation('softmax'))
+    model.add(Conv2D(32, (3, 3), padding='same'))
+    model.add(Activation('tanh'))
+    model.add(Conv2D(32, (3, 3)))
+    model.add(Activation('tanh'))
+    model.add(Conv2D(32, (3, 3), padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
 
     model.add(Flatten())
-    model.add(Dense(100))
-    model.add(Activation('softmax'))
-    model.add(Dropout(0.5))
+    model.add(Dense(128))
+    model.add(Activation('tanh'))
+    model.add(Dropout(0.25))
     model.add(Dense(num_classes))
     model.add(Activation('softmax'))
 
-    # initiate RMSprop optimizer
-    opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
-
-    # Let's train the model using RMSprop
-    model.compile(loss='categorical_crossentropy',
-                  optimizer=opt,
-                  metrics=['accuracy'])
+    model.compile(loss='mean_squared_error', optimizer='sgd', metrics=['accuracy'])
 
     model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=epochs,
               validation_data=(x_test, y_test),
               shuffle=True)
+
+    y = model.predict(x_test)
+    predicted = np.argmax(y, 1)
+    real = np.argmax(y_test, 1)
+
+    print("Predicted: ")
+    print(predicted)
+    print("Real: ")
+    print(real)
+
+    print("Accuracy: ")
+    acc = [1 if predicted[i] == real[i] else 0 for i in range(predicted.shape[0])]
+    print(sum(acc) / len(acc))
 
 train()

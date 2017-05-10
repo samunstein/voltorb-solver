@@ -9,11 +9,11 @@ from PIL import Image
 IMGHEIGHT = 480
 IMGWIDTH = 640
 
+READERFOLDER = "./"
+
 
 def getslice(imag, cx, cy):
     s = 86
-
-    print(imag.shape)
 
     startx = int(cx - s/2) if cx + s/2 < IMGWIDTH else IMGWIDTH - s
     starty = int(cy - s/2) if cy + s/2 < IMGHEIGHT else IMGHEIGHT - s
@@ -52,7 +52,7 @@ def read_webcam():
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 nparr = pygame.surfarray.array3d(img)
-                return nparr, input().split()
+                return nparr
 
         # draw frame
         screen.blit(img, (0, 0))
@@ -62,7 +62,7 @@ def read_webcam():
 
 
 def read_file():
-    img = scipy.misc.imread("out.png")
+    img = scipy.misc.imread(READERFOLDER + "out.png")
     return img
 
 
@@ -71,13 +71,13 @@ def save_hints(hints, numbers):
         print("There has to be 20 hints")
         return
     count = count_images()
-    file = open("labels.txt")
-    lines = file.readlines()
+    file = open(READERFOLDER + "labels.txt")
+    lines = file.read().split("\n")
     for i in range(count, count + 10):
-        scipy.misc.imsave("img/h{}.png".format(i), hints[i - count])
-        lines.append("img/h{}.png".format(i) + ":" + " ".join(numbers[2*(i - count):2*(i - count + 1)]))
+        scipy.misc.imsave(READERFOLDER + "img/h{}.png".format(i), hints[i - count].transpose(1, 0, 2))
+        lines.append(READERFOLDER + "img/h{}.png".format(i) + ":" + " ".join(numbers[2*(i - count):2*(i - count + 1)]))
     file.close()
-    file = open("labels.txt", "w")
+    file = open(READERFOLDER + "labels.txt", "w")
     file.write("\n".join(lines))
     file.close()
 
@@ -85,20 +85,20 @@ def save_hints(hints, numbers):
 def hints(imgs):
     hintlist = []
     for i in range(5):
-        hintlist.append(imgs[5][i])
-    for i in range(5):
         hintlist.append(imgs[i][5])
+    for i in range(5):
+        hintlist.append(imgs[5][i])
     return hintlist
 
 
 def count_images():
-    return len(os.listdir("img"))
+    return len(os.listdir(READERFOLDER + "img"))
 
 
 def label_images():
     labels = []
-    for name in os.listdir("img"):
-        img = scipy.misc.imread(os.path.join("img", name))
+    for name in os.listdir(READERFOLDER + "img"):
+        img = scipy.misc.imread(os.path.join(READERFOLDER + "img", name))
         img = Image.fromarray(img, 'RGB')
         img.show()
         labels.append(name + ":" + input())
@@ -106,10 +106,11 @@ def label_images():
 
 
 def read_webcam_and_save_hints():
-    img, hintnumbers = read_webcam()
+    img = read_webcam()
+    hintnumbers = input()
     imgs = imgprocess(img)
     hint = hints(imgs)
     save_hints(hint, hintnumbers)
 
-
-read_webcam_and_save_hints()
+if __name__ == "__main__":
+    read_webcam()
