@@ -46,10 +46,7 @@ class VoltorbUI:
         self.__mainwindow.mainloop()
 
     def update_square(self, x, y, i):
-        if i == 0:
-            self.__clicked[5 * y + x] = 0
-        else:
-            self.__clicked[5 * y + x] = 1
+        self.__clicked[5 * y + x] = i
         self.__button_press(self, x, y, i)
 
     def update(self, result):
@@ -63,8 +60,9 @@ class VoltorbUI:
                 r = "0"
                 if not poss.useful() or self.__clicked[5 * i + j]:
                     r = "NN"
+                    if not self.__clicked[5 * i + j]:
+                        self.color_buttons(i, j, "teal")
                 else:
-                    p = 1
                     if poss.values[0] > 0:
                         p = poss.probabilities()[0]
                         r = "{:.0f}".format(100 * p)
@@ -75,7 +73,8 @@ class VoltorbUI:
                         min_p = p
                     elif p == min_p:
                         lowest.append((i, j))
-
+                if self.__clicked[5 * i + j]:
+                    self.color_buttons(i, j, "green", self.__clicked[5 * i + j])
                 self.__buttons[4 * (5 * i + j)]["text"] = r
 
         for pos in lowest:
@@ -91,10 +90,11 @@ class VoltorbUI:
         self.__new_game_entry.delete(0, END)
 
 
-    def color_buttons(self, x, y, color):
-        for i in range(2):
-            for j in range(2):
-                self.__buttons[4 * y + 20 * x + 2 * i + j]["background"] = color
-
-
+    def color_buttons(self, x, y, color, square=None):
+        if square == None:
+            for i in range(2):
+                for j in range(2):
+                    self.__buttons[4 * y + 20 * x + 2 * i + j]["background"] = color
+        else:
+            self.__buttons[4 * y + 20 * x + square]["background"] = color
 
