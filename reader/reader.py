@@ -36,7 +36,7 @@ def read_webcam():
     pygame.camera.init()
 
     cameras = pygame.camera.list_cameras()
-    webcam = pygame.camera.Camera(cameras[1]) # Set right camera here
+    webcam = pygame.camera.Camera(cameras[0]) # Set right camera here
     webcam.start()
 
     # grab first frame
@@ -67,7 +67,7 @@ def read_file():
 
 
 def save_hints(hints, numbers):
-    if len(numbers) > 20:
+    if len(numbers) != 20:
         print("There has to be 20 hints")
         return
     count = count_images()
@@ -75,7 +75,14 @@ def save_hints(hints, numbers):
     lines = file.read().split("\n")
     for i in range(count, count + 10):
         scipy.misc.imsave(READERFOLDER + "img/h{}.png".format(i), hints[i - count].transpose(1, 0, 2))
-        lines.append(READERFOLDER + "img/h{}.png".format(i) + ":" + " ".join(numbers[2*(i - count):2*(i - count + 1)]))
+        firstnum = numbers[2 * (i - count)]
+        if len(firstnum) == 2:
+            hintnum = firstnum[0] + " " + firstnum[1] + " "
+        else:
+            hintnum = "0 " + firstnum + " "
+        hintnum += numbers[2 * (i - count) + 1]
+
+        lines.append(READERFOLDER + "img/h{}.png".format(i) + ":" + hintnum)
     file.close()
     file = open(READERFOLDER + "labels.txt", "w")
     file.write("\n".join(lines))

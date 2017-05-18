@@ -1,8 +1,7 @@
 from model.model import InputGrid, PossibilityGrid, Hint, KNOWN_STATES, UNKNOWN, ONE, TWO, THREE, VOLTORB
 from ui.ui import VoltorbUI
 
-# Gathermode decides whether input mode is via camera or via keyboard
-GATHERMODE = True
+GATHERMODE = False
 
 
 
@@ -126,7 +125,7 @@ def main():
 
         cameras = pygame.camera.list_cameras()
         # Change the right camera here. No way to know without trying.
-        webcam = pygame.camera.Camera(cameras[1])
+        webcam = pygame.camera.Camera(cameras[0])  # Change the right camera here. No way to know without trying.
         webcam.start()
 
     VoltorbUI(result, button_press, new_game)
